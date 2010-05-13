@@ -7,9 +7,11 @@ viper.worm = {
 	torque: 0.0001,
 	direction: 0,
 	distance: 0,
+	color: "rgb(255,255,255)",
 	holeDistance: 0,
 	hole: false,
 	holes: 0,
+	holeColor: "rgb(50,50,50)",
 	segments: [],
 	move: function(time) {
 		this.lastPosition.x = this.position.x;
@@ -27,12 +29,12 @@ viper.worm = {
 
 			// find wall collisions and if true reflect direction and redo the
 			// move
-			if ((x < 0.0) || (x > 1.0)) {
+			if (x < 0 || x > 1) {
 				this.direction = Math.PI - this.direction;
 				wallCollision = true;
 				break;
 			}
-			if ((y < 0.0) || (y > 0.95)) {
+			if (y < 0 || y > 1) {
 				this.direction = - this.direction;
 				wallCollision = true;
 				break;
@@ -57,31 +59,36 @@ viper.worm = {
 	recordHole: function() {
 		var holeInterval = 0.3;
 		// calc hole length to make it longer as the velocity increases
-		var holeLength = holeInterval / (14.0 * (1.0 - ((this.velocity - 0.00005) * 2500.0)));
+		var holeLength = holeInterval / (14 * (1 - ((this.velocity - 0.00005) * 2500)));
 
-		if ((this.distance > (this.holeDistance + holeInterval)) && (this.hole == false)) {
+		if (this.distance > (this.holeDistance + holeInterval) && this.hole == false) {
 			this.hole = true;
 			this.holes++;
 		}
 
-		if ((this.distance > (this.holeDistance + holeInterval + holeLength)) && (this.hole == true)) {
+		if (this.distance > (this.holeDistance + holeInterval + holeLength) && this.hole == true) {
 			this.hole = false;
 			this.holeDistance = this.distance;
 		}
 
 		return this.hole;
 	},
-	draw: function(canvas) {
-		var width = 200;
-		var height = 200;
+	draw: function() {
+		var width = viper.canvas.width;
+		var height = viper.canvas.height;
 
+		var context = viper.context;
 
-		canvas.fillStyle = "rgb(255,255,255)";
-		canvas.fillRect(0, 0, 200, 200);
-
-        	canvas.moveTo(this.lastPosition.x * width, this.lastPosition.y * height);
-        	canvas.lineTo(this.position.x * width, this.position.y * height);
-        	canvas.strokeStyle = "#000";
-		canvas.stroke();
+		for (var key in this.segments) {
+			context.save();
+			var segment = this.segments[key];
+			context.beginPath();
+			context.moveTo(segment.start.x * width, segment.start.y * height);
+			context.lineTo(segment.stop.x * width, segment.stop.y * height);
+			context.lineWidth = 1;
+			context.strokeStyle = !this.hole ? this.color : this.holeColor;
+			context.stroke();
+			context.restore();
+		}
 	}
 }

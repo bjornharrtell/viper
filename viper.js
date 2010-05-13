@@ -1,3 +1,4 @@
+// crockford style prototypal inheritance method
 if (typeof Object.create !== 'function') {
     Object.create = function (o) {
         function F() {}
@@ -6,12 +7,15 @@ if (typeof Object.create !== 'function') {
     };
 }
 
+// namespace and singleton instance of the game
 viper = {
 	lastTime: null,
 	worms: [],
 	canvas: null,
+	context: null,
 	start: function(id) {
-		this.canvas = document.getElementById(id).getContext('2d');	
+		this.canvas = document.getElementById(id);
+		this.context = this.canvas.getContext('2d');
 
 		var worm = Object.create(viper.worm);
 		worm.position = {x: 0.2, y: 0.2};
@@ -22,19 +26,23 @@ viper = {
 		var now = d.getTime();
 		this.lastTime = now + 100;
 
+		// need to get this in a closure for the callback
 		var that = this;
 		var callback = function() {
-			if (!that.updatePhysics()) return;
+			if (!that.timestep()) return;
 
 			for (var wormkey in that.worms) {
 				var worm = that.worms[wormkey];
-				worm.draw(that.canvas);
+				worm.draw();
 			}	
 		}
 
+		this.context.fillStyle = "rgb(0,0,0)";
+		this.context.fillRect(0, 0, this.canvas.width, this.canvas.height);
+
 		setInterval(callback, 50);
 	},
-	updatePhysics: function() {
+	timestep: function() {
 		var d = new Date();
 
 		var now = d.getTime();
