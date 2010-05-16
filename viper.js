@@ -26,21 +26,13 @@ viper = {
 		var now = d.getTime();
 		this.lastTime = now + 100;
 
-		// need to get this in a closure for the callback
-		var that = this;
-		var callback = function() {
-			if (!that.timestep()) return;
-
-			for (var wormkey in that.worms) {
-				var worm = that.worms[wormkey];
-				worm.draw();
-			}	
-		}
-
 		this.context.fillStyle = "rgb(0,0,0)";
 		this.context.fillRect(0, 0, this.canvas.width, this.canvas.height);
 
-		setInterval(callback, 50);
+		var that = this;
+		document['onkeydown'] = function(e) { that.onKeyDown(e); };
+		document['onkeyup'] = function(e) { that.onKeyUp(e); };
+		setInterval(function() { that.timestep(); }, 50);
 	},
 	timestep: function() {
 		var d = new Date();
@@ -53,12 +45,41 @@ viper = {
 
 		for (var wormkey in this.worms) {
 			var worm = this.worms[wormkey];
-			worm.move(elapsed);
+
+			if (worm.alive) {
+				worm.move(elapsed);
+				worm.draw();
+				this.collisionTest(worm);
+			}
 		}
 
 		this.lastTime = now;
 
 		return true;
+	},
+	collisionTest: function(worm) {
+		for (var wormkey in this.worms) {
+			var otherWorm = this.worms[wormkey];
+
+			var result = otherWorm.collisionTest(worm.segments[worm.segments.length-1]);
+			
+			if (result == 2) {
+				worm.alive = false;
+			}
+		}
+	},
+	onKeyDown: function(e) {
+		if (e.keyCode == 37) {
+			this.worms[0].torque = -0.002;	
+		}
+		else if (e.keyCode == 39) {
+			this.worms[0].torque = 0.002;	
+		}
+	},
+	onKeyUp: function(e) {
+		if (e.keyCode == 37 || e.keyCode == 39) {
+			this.worms[0].torque = 0;	
+		}
 	}
 };
 

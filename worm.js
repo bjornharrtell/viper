@@ -4,7 +4,7 @@ viper.worm = {
 	position: Object.create(viper.point),
 	lastPosition: Object.create(viper.point),
 	velocity: 0.00005,
-	torque: 0.0001,
+	torque: 0,
 	direction: 0,
 	distance: 0,
 	color: "rgb(255,255,255)",
@@ -55,6 +55,24 @@ viper.worm = {
 		// increase speed
 		this.distance += distance;
 		this.velocity += 0.00000006;
+	},
+	collisionTest: function(line) {
+		if (this.segments.length<3) return 0;
+		
+		for (var i=0; i<this.segments.length-2; i++) {
+			var segment = this.segments[i];
+
+			if (line.intersects(segment)) {
+				if (segment.hole) {
+					return 1;
+				}
+				else {
+					return 2;
+				}
+			}
+		}
+
+		return 0;
 	},
 	recordHole: function() {
 		var holeInterval = 0.3;
