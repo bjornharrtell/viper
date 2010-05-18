@@ -114,7 +114,7 @@ viper.worm = {
 			context.beginPath();
 			context.moveTo(segment.start.x * width, segment.start.y * height);
 			context.lineTo(segment.stop.x * width, segment.stop.y * height);
-			context.lineWidth = 1;
+			context.lineWidth = 2;
 			context.strokeStyle = !this.hole ? this.color : this.holeColor;
 			context.stroke();
 			context.restore();
