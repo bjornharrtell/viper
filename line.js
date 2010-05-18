@@ -1,11 +1,11 @@
 
 viper.line = {
-	start: Object.create(viper.point),
-	stop: Object.create(viper.point),
-	horisontal: true, 
-	vertical: true, 
-        k: 0,
-        m: 0,
+	start: null,
+	stop: null,
+	horisontal: null, 
+	vertical: null, 
+        k: null,
+        m: null,
         calcConstants: function(line) {
 		this.horisontal = false;
 		this.vertical = false;
@@ -13,7 +13,7 @@ viper.line = {
 		if (this.stop.y - this.start.y == 0) {
 			this.horisontal = true;
 			this.k = 0;
-			this.m = stop.y;
+			this.m = this.stop.y;
 			return;
 		}
 
@@ -21,9 +21,10 @@ viper.line = {
 			this.vertical = true;
 			return;
 		}
-		
-		this.k = (this.stop.y - this.start.y) / (this.stop.x - this.start.x);
-		this.m = this.start.y - (this.k * this.start.x);		
+		else {
+			this.k = (this.stop.y - this.start.y) / (this.stop.x - this.start.x);
+			this.m = this.start.y - (this.k * this.start.x);
+		}		
 	},
 	intersects: function(line) {
 		this.calcConstants();
@@ -88,7 +89,7 @@ viper.line = {
 
 		if (y > min && y < max) result = result && true;
 
-		return true;
+		return result;
 	}
 }
 

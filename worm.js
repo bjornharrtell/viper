@@ -1,8 +1,8 @@
 viper.worm = {
 	alive: true,
 	score: 0,
-	position: Object.create(viper.point),
-	lastPosition: Object.create(viper.point),
+	position: null,
+	lastPosition: null,
 	velocity: 0.00005,
 	torque: 0,
 	direction: 0,
@@ -14,6 +14,12 @@ viper.worm = {
 	holeColor: "rgb(50,50,50)",
 	segments: [],
 	move: function(time) {
+		if (this.lastPosition === null) {
+			this.lastPosition = Object.create(viper.point);
+		}
+
+		this.lastPosition.copyFrom(this.position);
+
 		this.lastPosition.x = this.position.x;
 		this.lastPosition.y = this.position.y;
 
@@ -44,12 +50,15 @@ viper.worm = {
 		}
 
 		// valid move is determined so grow the worm..
+		
 		this.position.x = x;
 		this.position.y = y;
 		var segment = Object.create(viper.wormsegment);
-		segment.start = this.lastPosition; 
-		segment.stop = this.position;
-		this.recordHole();
+		segment.start = Object.create(viper.point);
+		segment.stop = Object.create(viper.point);
+		segment.start.copyFrom(this.lastPosition); 
+		segment.stop.copyFrom(this.position);
+		segment.hole = this.recordHole();
 		this.segments.push(segment);
 
 		// increase speed
@@ -92,14 +101,16 @@ viper.worm = {
 		return this.hole;
 	},
 	draw: function() {
+		if (this.segments.length === 0) return;
+
 		var width = viper.canvas.width;
 		var height = viper.canvas.height;
 
 		var context = viper.context;
 
-		for (var key in this.segments) {
+		//for (var key in this.segments) {
 			context.save();
-			var segment = this.segments[key];
+			var segment = this.segments[this.segments.length-1];
 			context.beginPath();
 			context.moveTo(segment.start.x * width, segment.start.y * height);
 			context.lineTo(segment.stop.x * width, segment.stop.y * height);
@@ -107,6 +118,6 @@ viper.worm = {
 			context.strokeStyle = !this.hole ? this.color : this.holeColor;
 			context.stroke();
 			context.restore();
-		}
+		//}
 	}
 }

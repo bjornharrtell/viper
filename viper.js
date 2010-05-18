@@ -18,7 +18,9 @@ viper = {
 		this.context = this.canvas.getContext('2d');
 
 		var worm = Object.create(viper.worm);
-		worm.position = {x: 0.2, y: 0.2};
+		worm.position = Object.create(viper.point);
+		worm.position.x = 0.2;
+		worm.position.y = 0.2;
 		worm.direction = 0.4;
 		this.worms.push(worm);
 
