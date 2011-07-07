@@ -46,7 +46,7 @@ class Worm
         
         @position.x = x
         @position.y = y
-        segment = new WormSegment(@lastPosition, @position, @recordHole())
+        segment = new WormSegment(@lastPosition.clone(), @position.clone(), @recordHole())
         @segments.push segment
 
         # increase speed

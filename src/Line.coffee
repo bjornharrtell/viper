@@ -38,7 +38,7 @@ class Line
             x = (@m-line.m) / (line.k-@k)
             y = ( (@k*line.m) - (line.k*@m) ) / (@k-line.k)
         
-        if @within(x,y) and line.within(x,y)
+        if @within(x, y) and line.within(x, y)
             return true
         else
             return false
