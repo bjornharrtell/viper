@@ -15,7 +15,6 @@ class Worm
     move: (time) ->
         @lastPosition = @position.clone()
 
-        # precalc next move
         wallCollision = true
         x = 0
         y = 0
@@ -25,11 +24,10 @@ class Worm
             # calc new potential position
             @direction += @torque * time
             distance = @velocity * time
-            x = @position.x + distance * Math.cos(@direction)
-            y = @position.y + distance * Math.sin(@direction)
+            x = @position.x + distance * Math.cos @direction
+            y = @position.y + distance * Math.sin @direction
 
-            # find wall collisions and if true reflect direction and redo the
-            # move
+            # find wall collisions and if true reflect direction and redo the move
             if x < 0 or x > 1
                 @direction = Math.PI - @direction
                 wallCollision = true
@@ -43,15 +41,16 @@ class Worm
             wallCollision = false
 
         # valid move is determined so grow the worm..
-        
         @position.x = x
         @position.y = y
-        segment = new WormSegment(@lastPosition.clone(), @position.clone(), @recordHole())
+        segment = new WormSegment @lastPosition.clone(), @position.clone(), @recordHole()
         @segments.push segment
 
         # increase speed
         @distance += distance
         @velocity += 0.0000002
+
+        return wallCollision
 
     collisionTest: (line) ->
         if @segments.length<3

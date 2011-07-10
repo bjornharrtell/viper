@@ -5,6 +5,8 @@ class Line
         @horisontal = false
         @vertical = false
 
+        @horisontal = " kk"
+
         if @stop.y - @start.y is 0
             @horisontal = true
             @k = 0
