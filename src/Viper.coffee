@@ -33,12 +33,12 @@ class Viper
             thread: new Audio("thread.ogg")
             wohoo: new Audio("wohoo.ogg")
 
-        @sounds.wohoo.play()
+        @sounds.start.play()
         
         setTimeout (=> @start()), 500
 
     start: ->
-        @sounds.start.play()
+        @sounds.wohoo.play()
         worm = new Worm new Point(0.2, 0.2), 0.4
         @worms.push worm
 

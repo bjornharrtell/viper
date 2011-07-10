@@ -43,7 +43,7 @@ class Worm
         # valid move is determined so grow the worm..
         @position.x = x
         @position.y = y
-        segment = new WormSegment @lastPosition.clone(), @position.clone(), @recordHole()
+        segment = new WormSegment(@lastPosition.clone(), @position.clone(), @recordHole())
         @segments.push segment
 
         # increase speed
