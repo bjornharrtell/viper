@@ -80,11 +80,11 @@ class Worm
         # calc hole length to make it longer as the velocity increases
         holeLength = holeInterval / (14 * (1 - ((@velocity - 0.00005) * 2500)))
 
-        if @distance > @holeDistance + holeInterval && @hole is false
+        if @distance > @holeDistance + holeInterval and hole is false
             @hole = true
             @holes++
 
-        if @distance > @holeDistance + holeInterval + holeLength && @hole is true
+        if @distance > @holeDistance + holeInterval + holeLength and @hole is true
             @hole = false
             @holeDistance = @distance
 

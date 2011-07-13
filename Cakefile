@@ -3,8 +3,6 @@ fs     = require 'fs'
 
 appFiles  = [
   'MainMenu'
-  'Point'
-  'Line'
   'WormSegment'
   'Worm'
   'Viper'
