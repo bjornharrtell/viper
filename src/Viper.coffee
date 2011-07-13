@@ -39,7 +39,7 @@ class Viper
 
     start: ->
         @sounds.wohoo.play()
-        worm = new Worm new Point(0.2, 0.2), 0.4
+        worm = new Worm new jsts.geom.Coordinate(0.2, 0.2), 0.4
         @worms.push worm
 
         now = new Date().getTime()
