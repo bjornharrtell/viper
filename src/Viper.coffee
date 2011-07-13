@@ -1,21 +1,21 @@
 class Viper
     constructor: ->
         @version = "0.1"
-        @worms = []     
+        @worms = []
 
-        @canvas = document.getElementById 'canvas'
-        @context = @canvas.getContext '2d'
-        @score = document.getElementById 'score'
+        $('#version').text(@version)
 
-        @canvas.width = 500
-        @canvas.height = 500
+        new MainMenu(@)
 
-        @context.fillStyle = "rgb(0,0,0)"
-        @context.fillRect(0, 0, @canvas.width, @canvas.height)
-        @context.fillStyle = "rgb(255,0,0)"
+    init: ->
+        @canvas = $('#canvas')
+        @context = @canvas.get(0).getContext '2d'
+        @score = $('#score')
 
-        document['onkeydown'] = (e) => @onKeyDown e
-        document['onkeyup'] = (e) => @onKeyUp e
+        @score.fadeIn()
+
+        $(document).keydown (e) => @onKeyDown e
+        $(document).keyup (e) => @onKeyUp e
 
         @sounds =
             background: new Audio("background.ogg")
@@ -52,22 +52,22 @@ class Viper
 
         if @lastTime > now then return false
 
-        elapsed = now - @lastTime
+        @elapsed = now - @lastTime
 
-        crawl = (worm) =>
-            if worm.alive
-                wallCollision = worm.move elapsed
-                if wallCollision then @sounds.bounce.play()
-                worm.draw @context
-                @collisionTest worm
+        @crawl worm for worm in @worms
 
-        crawl worm for worm in @worms
-
-        @score.innerHTML = "Score: #{worm.score}"
+        @score.text("Score: #{worm.score}")
 
         @lastTime = now
 
         return true
+
+    crawl: (worm) =>
+        if worm.alive
+            wallCollision = worm.move @elapsed
+            if wallCollision then @sounds.bounce.play()
+            worm.draw @context
+            @collisionTest worm
 
     collisionTest: (worm) ->
         test = (otherWorm) =>

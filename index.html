@@ -3,18 +3,55 @@
 	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" /> 
 	<title>Viper</title>
 
+    <link href='http://fonts.googleapis.com/css?family=Ubuntu&v2' rel='stylesheet' type='text/css'>
+
+    <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.6.2/jquery.min.js" type="text/javascript"></script>
+    <script src="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8.14/jquery-ui.min.js" type="text/javascript"></script>
+
+    <script src="http://www.openlayers.org/dev/OpenLayers.js" type="text/javascript"></script>
+    <script src="lib/jsts.js" type="text/javascript"></script>
+
 	<style type="text/css">
         body, html {
             overflow: hidden;
-            font-family: Helvetica, Arial, sans-serif;
+            font-family: 'Ubuntu', sans-serif;
             color: #fff;
             font-size: 11px;
             background: #010c12;
         }
-        .h1 {
-            font-family: Arial
+        #title {
+            font-size: 24pt;
+            margin-left: 0px;
         }
-        .game {
+        #version {
+        }
+        #score {
+            display: none;
+            float: right;
+            margin-top: 20px;
+        }
+        #header {
+            padding-left: 5px;
+            padding-right: 5px;
+        }
+        #menu {
+            position: absolute;
+            width: 500px;
+            top: 25%;
+            text-align:center;
+            margin: 5px;
+        }
+        #menu ul {
+            font-size: 12pt;
+            padding: 0;
+            cursor: pointer;
+        }
+        #menu li {
+            font-size: 12pt;
+            list-style-type: none;
+            color: #888888;
+        }
+        #game {
             position: absolute;
             width: 500px;
             height: 600px;
@@ -23,18 +60,32 @@
             margin-left: -250px;
             margin-top: -300px;
         }
-        .canvas {
+        #board {
             border: 5px solid #555555;
+            border-radius: 3px;
             width: 500px;
             height: 500px;
         }
+        
     </style>
 </head>
 <body style="margin: 5px; overflow: hidden">
-    <div class="game">    
-        <h1>Viper</h1>
-        <p id="score">Score: 0</p>
-	    <canvas id="canvas" class="canvas"></canvas>
+    <div id="game">
+        <div id=header>
+            <span id="title">Viper</span>
+            <span id="version"></span>
+            <span id="score">Score: 0</span>
+        </div>
+        <div id="board">
+	        <canvas id="canvas" width=500 height=500></canvas>
+        </div> 
+        <div id=menu>
+            <ul>
+                <li id="startsingle">Start single player game</li>
+                <li id="joinmulti">Join multiplayer game</li>
+                <li id="createmulti">Create multiplayer game</li>
+            </ul>
+        </div>
     </div>
     <script src="lib/viper.js" type="text/javascript"></script>
 </body>

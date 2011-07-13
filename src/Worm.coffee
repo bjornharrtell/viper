@@ -11,6 +11,10 @@ class Worm
         @holes = 0
         @holeColor = "rgb(50,50,50)"
         @segments = []
+        @wormSegments = 0
+
+        @wormSegmentCache = []
+        @lineSegmentIndex = new jsts.simplify.LineSegmentIndex()
     
     move: (time) ->
         @lastPosition = @position.clone()
@@ -43,8 +47,17 @@ class Worm
         # valid move is determined so grow the worm..
         @position.x = x
         @position.y = y
+
         segment = new WormSegment(@lastPosition.clone(), @position.clone(), @recordHole())
         @segments.push segment
+        @wormSegments++;
+
+        if @wormSegmentCache[1] then @wormSegmentCache[2] = @wormSegmentCache[1]
+        if @wormSegmentCache[0] then @wormSegmentCache[1] = @wormSegmentCache[0]
+
+        @wormSegmentCache[0] = segment
+
+        if @wormSegmentCache[2] then @lineSegmentIndex.add @wormSegmentCache[2]
 
         # increase speed
         @distance += distance
@@ -53,19 +66,14 @@ class Worm
         return wallCollision
 
     collisionTest: (line) ->
-        if @segments.length<3
-            return 0
+        if @segments.length<3 then return 0
+
+        intersectingLineSegments = @lineSegmentIndex.query(line);
         
-        count = 0;
-        while count<@segments.length-2
-            segment = @segments[count]
-
-            if line.intersects segment
-                if segment.hole then return 1 else return 2
-
-            count++
-
-        return 0
+        if intersectingLineSegments.length is 0
+            return 0
+        else
+            if intersectingLineSegments[0].hole then return 1 else return 2
    
     recordHole: ->
         holeInterval = 0.3
