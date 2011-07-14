@@ -43,23 +43,8 @@ class MainMenu
       'color': '#ffffff'
       
   join: ->
-    $.ajax
-      url: '/games/random'
-      success: (sessionID) =>
-        $.ajax
-          url: "/games/#{sessionID}"
-          type: 'POST'
-          success: (response) =>
-            socket = io.connect()
-            socket.emit 'join', 
-              hostId: sessionID
-              opponentId: @viper.sessionID
-   
+    @viper.join()
+
   create: ->
-    $.ajax
-      url: '/games'
-      type: 'POST'
-      success: (response) =>
-        socket = io.connect()
-        socket.emit 'waiting', @viper.sessionID
+    @viper.create()
 

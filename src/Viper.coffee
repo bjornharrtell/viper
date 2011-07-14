@@ -10,7 +10,7 @@ class Viper
       success: (response) =>
         @sessionID = response.sessionID
         
-        new MainMenu(@)
+        @mainMenu = new MainMenu(@)
       
         $.ajax
           url: '/' + response.status
@@ -19,6 +19,38 @@ class Viper
             $('#gameswaiting').text "Games waiting for players to join: #{response.gamesWaitingCount}"
             $('#gamesinprogress').text "Games in progress: #{response.gamesStartedCount}"
 
+  
+  create: ->
+    $.ajax
+      url: '/games'
+      type: 'POST'
+      success: (response) =>
+        @gameID =  response.gameID
+        @socket = io.connect()
+        
+        @socket.on 'start', =>
+          @mainMenu.destroy()
+          @init()
+        
+        @socket.emit 'join',
+          sessionID: @sessionID
+          gameID: @gameID
+          
+  join: ->
+    $.ajax
+      url: '/games/random'
+      success: (response) =>
+        @gameID = response.gameID
+        @socket = io.connect()
+        
+        @socket.on 'start', =>
+          @mainMenu.destroy()
+          @init()
+        
+        @socket.emit 'join',
+          sessionID: @sessionID
+          gameID: @gameID
+  
   init: ->
     @canvas = $('#canvas')
     @context = @canvas.get(0).getContext '2d'
@@ -51,7 +83,10 @@ class Viper
 
   start: ->
     @sounds.wohoo.play()
-    worm = new Worm new jsts.geom.Coordinate(0.2, 0.2), 0.4
+    x = (Math.random() * 0.6) + 0.2;
+    y = (Math.random() * 0.6) + 0.2;
+    direction = (Math.random() - 0.5) * 2.0 * Math.PI;
+    worm = new Worm new jsts.geom.Coordinate(x, y), direction
     @worms.push worm
 
     now = new Date().getTime()
@@ -76,8 +111,17 @@ class Viper
 
   crawl: (worm) =>
     if worm.alive
-      wallCollision = worm.move @elapsed
-      if wallCollision then @sounds.bounce.play()
+      move = worm.move @elapsed
+      
+      #report move to socket
+      @socket.emit 'move', 
+        sessionID: @sessionID
+        gameID: @gameID
+        position:
+          x: move.position.x
+          y: move.position.y
+            
+      if move.wallCollision then @sounds.bounce.play()
       worm.draw @context
       @collisionTest worm
 

@@ -62,8 +62,10 @@ class Worm
     # increase speed
     @distance += distance
     @velocity += 0.0000002
-
-    return wallCollision
+    
+    return move =
+      position: @position
+      wallCollision: wallCollision
 
   collisionTest: (line) ->
     if @segments.length<3 then return 0
