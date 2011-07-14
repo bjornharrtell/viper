@@ -32,9 +32,25 @@ class Viper
           @mainMenu.destroy()
           @init()
         
+        @socket.on 'move', (data) =>
+          if (@worms.length==1)
+            x = (Math.random() * 0.6) + 0.2;
+            y = (Math.random() * 0.6) + 0.2;
+            direction = (Math.random() - 0.5) * 2.0 * Math.PI;
+            worm = new Worm new jsts.geom.Coordinate(x, y), direction
+            @worms.push worm
+          else
+            worm = @worms[1]
+            worm.lastPosition = worm.position.clone()
+            worm.position = new jsts.geom.Coordinate(data.position.x, data.position.y)
+            segment = new WormSegment(worm.lastPosition, worm.position, false)
+            worm.segments.push segment
+            worm.draw @context
+        
         @socket.emit 'join',
           sessionID: @sessionID
           gameID: @gameID
+
           
   join: ->
     $.ajax
@@ -101,6 +117,7 @@ class Viper
 
     @elapsed = now - @lastTime
 
+    #@crawl @worms[0]
     @crawl worm for worm in @worms
 
     @score.text("Score: #{worm.score}")
@@ -109,17 +126,20 @@ class Viper
 
     return true
 
-  crawl: (worm) =>
+  crawl: (worm) ->
+    if worm is not @worms[0] then return
+    
     if worm.alive
       move = worm.move @elapsed
       
       #report move to socket
-      @socket.emit 'move', 
-        sessionID: @sessionID
-        gameID: @gameID
-        position:
-          x: move.position.x
-          y: move.position.y
+      if @socket
+        @socket.emit 'move', 
+          sessionID: @sessionID
+          gameID: @gameID
+          position:
+            x: move.position.x
+            y: move.position.y
             
       if move.wallCollision then @sounds.bounce.play()
       worm.draw @context
@@ -138,6 +158,7 @@ class Viper
         @sounds.thread.play()
 
     test worm for worm in @worms
+    #test @worms[0]
 
   onKeyDown: (e) ->
     if e.keyCode is 37
