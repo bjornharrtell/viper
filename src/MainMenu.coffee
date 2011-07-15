@@ -15,12 +15,11 @@ class MainMenu
       @move false
     if e.keyCode == 13
       if @currentindex == 0
-        @destroy()
-        @viper.init()
+        @viper.initgame()
       else if @currentindex == 1
-        @join()
+        @viper.join()
       else if @currentindex == 2
-        @create()
+        @viper.create()
 
   destroy: ->
     $('#menu').fadeOut()
@@ -41,10 +40,4 @@ class MainMenu
     menuitem.stop()
     menuitem.animate
       'color': '#ffffff'
-      
-  join: ->
-    @viper.join()
-
-  create: ->
-    @viper.create()
 

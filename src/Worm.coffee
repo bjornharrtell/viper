@@ -50,7 +50,7 @@ class Worm
 
     segment = new WormSegment(@lastPosition.clone(), @position.clone(), @recordHole())
     @segments.push segment
-    @wormSegments++;
+    @wormSegments++
 
     if @wormSegmentCache[1] then @wormSegmentCache[2] = @wormSegmentCache[1]
     if @wormSegmentCache[0] then @wormSegmentCache[1] = @wormSegmentCache[0]

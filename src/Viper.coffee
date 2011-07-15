@@ -1,38 +1,63 @@
 class Viper
   constructor: ->
     @version = "0.1"
+    @canvas = $('#canvas')
+    @context = @canvas.get(0).getContext '2d'
+    @score = $('#score')
+    @urls = {}
     @worms = []
+    
+    @sounds =
+      background: new Audio("background.ogg")
+      bounce: new Audio("bounce.ogg")
+      doh: [new Audio("doh1.ogg"), 
+        new Audio("doh2.ogg"),
+        new Audio("doh3.ogg"),
+        new Audio("doh4.ogg"),
+        new Audio("doh5.ogg"),
+        new Audio("doh6.ogg")]
+      gameover: new Audio("gameover.ogg")
+      laugh: new Audio("laugh.ogg")
+      load: new Audio("load.ogg")
+      start: new Audio("start.ogg")
+      thread: new Audio("thread.ogg")
+      wohoo: new Audio("wohoo.ogg")
 
     $('#version').text(@version)
-
+  
+    # get root resource
     $.ajax
-      url: '/'
-      success: (response) =>
-        @sessionID = response.sessionID
-        
-        @mainMenu = new MainMenu(@)
-      
-        $.ajax
-          url: '/' + response.status
-          success: (response) ->
-            $('#users').text "Users online: #{response.usersCount}"
-            $('#gameswaiting').text "Games waiting for players to join: #{response.gamesWaitingCount}"
-            $('#gamesinprogress').text "Games in progress: #{response.gamesStartedCount}"
+      url: "/"
+      success: initmenu
 
+  initmenu: (response)->
+    @urls.games = response.games
+    @urls.status = response.status
+    @sessionID = response.sessionID
+    
+    @mainMenu = new MainMenu()
+  
+    # Get server status
+    $.ajax
+      url: "/#{@urls.status}"
+      success: (response) ->
+        $('#users').text "Users online: #{response.usersCount}"
+        $('#gameswaiting').text "Games waiting for players to join: #{response.gamesWaitingCount}"
+        $('#gamesinprogress').text "Games in progress: #{response.gamesStartedCount}"
   
   create: ->
     $.ajax
-      url: '/games'
+      url: "/#{@urls.games}"
       type: 'POST'
       success: (response) =>
         @gameID =  response.gameID
         @socket = io.connect()
         
         @socket.on 'start', =>
-          @mainMenu.destroy()
-          @init()
+          @initgame()
         
         @socket.on 'move', (data) =>
+          # TODO: refactor preliminary mp test code
           if (@worms.length==1)
             x = (Math.random() * 0.6) + 0.2;
             y = (Math.random() * 0.6) + 0.2;
@@ -54,50 +79,30 @@ class Viper
           
   join: ->
     $.ajax
-      url: '/games/random'
+      url: "/#{@urls.games}/random"
       success: (response) =>
         @gameID = response.gameID
         @socket = io.connect()
         
         @socket.on 'start', =>
-          @mainMenu.destroy()
-          @init()
+          @initgame()
         
         @socket.emit 'join',
           sessionID: @sessionID
           gameID: @gameID
   
-  init: ->
-    @canvas = $('#canvas')
-    @context = @canvas.get(0).getContext '2d'
-    @score = $('#score')
-
+  initgame: ->
+    @mainMenu.destroy()
     @score.fadeIn()
 
     $(document).keydown (e) => @onKeyDown e
     $(document).keyup (e) => @onKeyUp e
-
-    @sounds =
-      background: new Audio("background.ogg")
-      bounce: new Audio("bounce.ogg")
-      doh: [new Audio("doh1.ogg"), 
-        new Audio("doh2.ogg"),
-        new Audio("doh3.ogg"),
-        new Audio("doh4.ogg"),
-        new Audio("doh5.ogg"),
-        new Audio("doh6.ogg")]
-      gameover: new Audio("gameover.ogg")
-      laugh: new Audio("laugh.ogg")
-      load: new Audio("load.ogg")
-      start: new Audio("start.ogg")
-      thread: new Audio("thread.ogg")
-      wohoo: new Audio("wohoo.ogg")
-
-    @sounds.start.play()
     
-    setTimeout (=> @start()), 500
+    @sounds.start.play()
 
-  start: ->
+    setTimeout (=> @startgame()), 500
+
+  startgame: ->
     @sounds.wohoo.play()
     x = (Math.random() * 0.6) + 0.2;
     y = (Math.random() * 0.6) + 0.2;
@@ -107,6 +112,7 @@ class Viper
 
     now = new Date().getTime()
     @lastTime = now + 100
+    
     # TODO: optimize with requestAnimationFrame
     setInterval (=> @timestep()), 50
 
@@ -127,6 +133,7 @@ class Viper
     return true
 
   crawl: (worm) ->
+    # refactor preliminary mp test code
     if worm is not @worms[0] then return
     
     if worm.alive
@@ -158,7 +165,6 @@ class Viper
         @sounds.thread.play()
 
     test worm for worm in @worms
-    #test @worms[0]
 
   onKeyDown: (e) ->
     if e.keyCode is 37
