@@ -11,7 +11,6 @@ class Worm
     @holes = 0
     @holeColor = "rgb(50,50,50)"
     @segments = []
-    @wormSegments = 0
 
     @wormSegmentCache = []
     @lineSegmentIndex = new jsts.simplify.LineSegmentIndex()
@@ -38,7 +37,7 @@ class Worm
         break
       
       if y < 0 or y > 1
-        @direction = - @direction
+        @direction = -@direction
         wallCollision = true
         break
 
@@ -48,9 +47,8 @@ class Worm
     @position.x = x
     @position.y = y
 
-    segment = new WormSegment(@lastPosition.clone(), @position.clone(), @recordHole())
+    segment = new WormSegment @lastPosition.clone(), @position.clone(), @recordHole()
     @segments.push segment
-    @wormSegments++
 
     if @wormSegmentCache[1] then @wormSegmentCache[2] = @wormSegmentCache[1]
     if @wormSegmentCache[0] then @wormSegmentCache[1] = @wormSegmentCache[0]
@@ -64,7 +62,9 @@ class Worm
     @velocity += 0.0000002
     
     return move =
-      position: @position
+      x: @position.x
+      y: @position.y
+      hole: @hole
       wallCollision: wallCollision
 
   collisionTest: (line) ->
@@ -92,20 +92,23 @@ class Worm
 
     return @hole
   
-  draw: (context) ->
+  draw: (context, color, holeColor) ->
     if @segments.length is 0
       return
 
     width = context.canvas.width
     height = context.canvas.height
+    
+    if not color? then color = @color
+    if not holeColor? then holeColor = @holeColor
 
     context.save()
     segment = @segments[@segments.length-1]
     context.beginPath()
-    context.moveTo(segment.start.x * width, segment.start.y * height)
-    context.lineTo(segment.stop.x * width, segment.stop.y * height)
+    context.moveTo segment.start.x * width, segment.start.y * height
+    context.lineTo segment.stop.x * width, segment.stop.y * height
     context.lineWidth = 2
-    context.strokeStyle = if @hole then @holeColor else @color
+    context.strokeStyle = if segment.hole then holeColor else color
     context.stroke()
     context.restore()
 

@@ -23,19 +23,19 @@ class Viper
       thread: new Audio("thread.ogg")
       wohoo: new Audio("wohoo.ogg")
 
-    $('#version').text(@version)
+    $('#version').text @version
   
     # get root resource
     $.ajax
       url: "/"
-      success: initmenu
+      success: @initmenu
 
-  initmenu: (response)->
+  initmenu: (response) =>
     @urls.games = response.games
     @urls.status = response.status
     @sessionID = response.sessionID
     
-    @mainMenu = new MainMenu()
+    @mainMenu = new MainMenu @
   
     # Get server status
     $.ajax
@@ -49,49 +49,44 @@ class Viper
     $.ajax
       url: "/#{@urls.games}"
       type: 'POST'
-      success: (response) =>
-        @gameID =  response.gameID
-        @socket = io.connect()
-        
-        @socket.on 'start', =>
-          @initgame()
-        
-        @socket.on 'move', (data) =>
-          # TODO: refactor preliminary mp test code
-          if (@worms.length==1)
-            x = (Math.random() * 0.6) + 0.2;
-            y = (Math.random() * 0.6) + 0.2;
-            direction = (Math.random() - 0.5) * 2.0 * Math.PI;
-            worm = new Worm new jsts.geom.Coordinate(x, y), direction
-            @worms.push worm
-          else
-            worm = @worms[1]
-            worm.lastPosition = worm.position.clone()
-            worm.position = new jsts.geom.Coordinate(data.position.x, data.position.y)
-            segment = new WormSegment(worm.lastPosition, worm.position, false)
-            worm.segments.push segment
-            worm.draw @context
-        
-        @socket.emit 'join',
-          sessionID: @sessionID
-          gameID: @gameID
+      success: @joingame
 
-          
   join: ->
     $.ajax
       url: "/#{@urls.games}/random"
-      success: (response) =>
-        @gameID = response.gameID
-        @socket = io.connect()
-        
-        @socket.on 'start', =>
-          @initgame()
-        
-        @socket.emit 'join',
-          sessionID: @sessionID
-          gameID: @gameID
-  
-  initgame: ->
+      success: @joingame
+          
+  joingame: (response) =>
+    @gameID = response.gameID
+    @socket = io.connect()
+    
+    @socket.on 'start', @onStart
+    @socket.on 'move', @onMove
+    
+    @socket.emit 'join',
+      sessionID: @sessionID
+      gameID: @gameID
+          
+  onMove: (data) =>
+    x = data.x
+    y = data.y
+    hole = data.hole
+    
+    #console.log "Move recieved x: #{x} y: #{y} hole: #{hole}"
+
+    if @worms.length==1
+      worm = new Worm new jsts.geom.Coordinate(x, y), 0
+      @worms.push worm
+    else
+      worm = @worms[1]
+      worm.lastPosition = worm.position.clone()
+      worm.position = new jsts.geom.Coordinate(x, y)
+      segment = new WormSegment worm.lastPosition, worm.position, hole
+      worm.segments.push segment
+      worm.lineSegmentIndex.add segment
+      worm.draw @context, "rgb(155,155,155)", "rgb(25,25,25)"
+
+  onStart: =>
     @mainMenu.destroy()
     @score.fadeIn()
 
@@ -134,7 +129,7 @@ class Viper
 
   crawl: (worm) ->
     # refactor preliminary mp test code
-    if worm is not @worms[0] then return
+    if worm != @worms[0] then return
     
     if worm.alive
       move = worm.move @elapsed
@@ -144,9 +139,9 @@ class Viper
         @socket.emit 'move', 
           sessionID: @sessionID
           gameID: @gameID
-          position:
-            x: move.position.x
-            y: move.position.y
+          x: move.x
+          y: move.y
+          hole: move.hole
             
       if move.wallCollision then @sounds.bounce.play()
       worm.draw @context
@@ -164,7 +159,7 @@ class Viper
         worm.score += 1
         @sounds.thread.play()
 
-    test worm for worm in @worms
+    test otherWorm for otherWorm in @worms
 
   onKeyDown: (e) ->
     if e.keyCode is 37

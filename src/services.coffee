@@ -1,12 +1,18 @@
-express = require('express');
+express = require('express')
 
-app = express.createServer express.logger()
-app.use(express.static(__dirname + '/public'));
+app = express.createServer() #express.logger()
+app.use(express.static(__dirname + '/public'))
 app.use express.cookieParser()
 app.use express.session
   secret: 'viperservices'
 
 io = require('socket.io').listen app
+
+io.configure 'development', ->
+  io.set 'log level', 1
+  
+io.configure 'production', ->
+  io.set 'log level', 1
 
 viper =
   version: '0.1'
@@ -19,16 +25,17 @@ gamescount = 0
 
 countStartedGames = ->
   count = 0;    
-  for key,game of games
+  for key, game of games
     if game.started then count++
   return count
 
 countWaitingGames = ->
   count = 0;    
-  for key,game of games
+  for key, game of games
     if game.waiting then count++
   return count;
 
+# root resource
 app.get "/", (request, response) ->
   root =
     version: viper.version
@@ -38,6 +45,7 @@ app.get "/", (request, response) ->
     sessionID: request.sessionID
   response.send root
 
+# get service status
 app.get "/#{viper.status}", (request, response) ->
   status =
     usersCount: Object.keys(request.sessionStore.sessions).length
@@ -45,11 +53,9 @@ app.get "/#{viper.status}", (request, response) ->
     gamesStartedCount: countStartedGames()
   response.send status
 
-app.get "/#{viper.games}", (request, response) ->
-  response.send games
-
 # get random game id
 app.get "/#{viper.games}/random", (request, response) ->
+  # TODO: make truly random
   for key of games
     response.send
       gameID: key
@@ -66,39 +72,38 @@ app.post "/#{viper.games}", (request, response) ->
     players: {}
 
   games[gameID] = game
-  console.log("Game #{gameID} created.")
+  console.log("Game #{gameID} created")
   response.send
     gameID: gameID
 
 port = process.env.PORT || 3000;
-app.listen port, ->
-  console.log("Listening on " + port);
-
+app.listen port
+# handle (web)socket connections
 io.sockets.on 'connection', (socket) ->
 
+  # handle join events from any client
   socket.on 'join', (data) ->
-    console.log "Client #{data.sessionID} joining game #{data.gameID}."
-    
     game = games[data.gameID]
     game.players[data.sessionID] =
       socket: socket
     
     playerscount = Object.keys(game.players).length
     
+    # send start signal to all players
     if playerscount>1
       for key, player of game.players
         player.socket.emit 'start'
 
+  # handle move events from any player
   socket.on 'move', (data) ->
-    console.log "Move on game #{data.gameID} from  #{data.sessionID}."
-    
-    sessionID = data.sessionID;
+    sessionID = data.sessionID
     game = games[data.gameID]
     
+    # send move to other players
     for key, player of game.players
-        if key == sessionID then continue
+      if key != sessionID
         player.socket.emit 'move'
-          worm: data.worm
-          position: data.position
+          x: data.x
+          y: data.y
+          hole: data.hole
  
-
