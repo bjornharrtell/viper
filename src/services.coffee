@@ -76,7 +76,7 @@ app.post "/#{viper.games}", (request, response) ->
   response.send
     gameID: gameID
 
-port = process.env.PORT || 3000;
+port = process.env.PORT || 80
 app.listen port
 # handle (web)socket connections
 io.sockets.on 'connection', (socket) ->

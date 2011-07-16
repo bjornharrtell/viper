@@ -1,6 +1,6 @@
 class Viper
   constructor: ->
-    @version = "0.1"
+    @version = "0.2"
     @canvas = $('#canvas')
     @context = @canvas.get(0).getContext '2d'
     @score = $('#score')
