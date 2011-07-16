@@ -37,6 +37,7 @@
             padding-right: 5px;
         }
         #menu {
+            display: none;
             position: absolute;
             width: 500px;
             top: 25%;
@@ -68,27 +69,47 @@
             width: 500px;
             height: 500px;
         }
+        #modal {
+            display: none;
+            position: absolute;
+            width: 500px;
+            top: 45%;
+            text-align:center;
+            margin: 5px;
+        }
+        #progress {
+            display: none;
+            position: absolute;
+            width: 500px;
+            top: 45%;
+            text-align:center;
+            margin: 5px;
+        }
         
     </style>
 </head>
 <body style="margin: 5px; overflow: hidden">
     <div id="game">
-        <div id=header>
+        <div id="header">
             <span id="title">Viper</span>
             <span id="version"></span>
             <span id="score">Score: 0</span>
         </div>
-        <div id="board">
-	        <canvas id="canvas" width=500 height=500></canvas>
-        </div> 
-        <div id=menu>
+        <div id="modal">
+        </div>
+        <div id="progress">
+        </div>
+        <div id="menu">
             <ul>
                 <li id="startsingle">Start single player game</li>
                 <li id="joinmulti">Join multiplayer game</li>
                 <li id="createmulti">Create multiplayer game</li>
             </ul>
         </div>
-        <div id=footer>
+        <div id="board">
+	        <canvas id="canvas" width=500 height=500></canvas>
+        </div>
+        <div id="footer">
             <div id="users"></div>
             <div id="gameswaiting"></div>
             <div id="gamesinprogress"></div>

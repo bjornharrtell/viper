@@ -7,22 +7,30 @@ class MainMenu
       'color': '#ffffff'
 
     $(document).bind 'keydown', @keydown
+    
+    $('#menu').fadeIn()
 
   keydown: (e) =>
-    if e.keyCode == 40
+    if e.keyCode is 40
       @move true
-    if e.keyCode == 38
+    if e.keyCode is 38
       @move false
-    if e.keyCode == 13
-      if @currentindex == 0
-        @viper.initgame()
-      else if @currentindex == 1
+    if e.keyCode is 13
+      if @currentindex is 0
+        @destroy()
+        @viper.startgame()
+      else if @currentindex is 1
         @viper.join()
-      else if @currentindex == 2
+      else if @currentindex is 2
         @viper.create()
 
   destroy: ->
+    for menuitem in @menuitems
+      do (menuitem) ->
+        menuitem.stop()
+        menuitem.css 'color', '#888888'
     $('#menu').fadeOut()
+    
     $(document).unbind 'keydown', @keydown
 
   move: (down) ->

@@ -53,13 +53,17 @@ app.get "/#{viper.status}", (request, response) ->
     gamesStartedCount: countStartedGames()
   response.send status
 
-# get random game id
+# get random game waiting id
 app.get "/#{viper.games}/random", (request, response) ->
   # TODO: make truly random
-  for key of games
-    response.send
-      gameID: key
-    break
+  for key, game of games
+    if game.waiting
+      response.send
+        success: true
+        gameID: key
+      return
+  response.send
+    success: false
 
 # create game
 app.post "/#{viper.games}", (request, response) ->
@@ -74,10 +78,12 @@ app.post "/#{viper.games}", (request, response) ->
   games[gameID] = game
   console.log("Game #{gameID} created")
   response.send
+    success: true
     gameID: gameID
 
 port = process.env.PORT || 80
 app.listen port
+
 # handle (web)socket connections
 io.sockets.on 'connection', (socket) ->
 
@@ -91,6 +97,8 @@ io.sockets.on 'connection', (socket) ->
     
     # send start signal to all players
     if playerscount>1
+      game.started = true
+      game.waiting = false
       for key, player of game.players
         player.socket.emit 'start'
 

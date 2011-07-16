@@ -72,6 +72,9 @@ class Worm
 
     intersectingLineSegments = @lineSegmentIndex.query(line);
     
+    # TODO: do intersect calc between segments found in index and input
+    # (index only match bounding, we need real intersections)
+    
     if intersectingLineSegments.length is 0
       return 0
     else

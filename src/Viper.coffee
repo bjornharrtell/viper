@@ -4,24 +4,25 @@ class Viper
     @canvas = $('#canvas')
     @context = @canvas.get(0).getContext '2d'
     @score = $('#score')
+    @progress = $('#progress')
     @urls = {}
     @worms = []
     
     @sounds =
-      background: new Audio("background.ogg")
-      bounce: new Audio("bounce.ogg")
-      doh: [new Audio("doh1.ogg"), 
-        new Audio("doh2.ogg"),
-        new Audio("doh3.ogg"),
-        new Audio("doh4.ogg"),
-        new Audio("doh5.ogg"),
-        new Audio("doh6.ogg")]
-      gameover: new Audio("gameover.ogg")
-      laugh: new Audio("laugh.ogg")
-      load: new Audio("load.ogg")
-      start: new Audio("start.ogg")
-      thread: new Audio("thread.ogg")
-      wohoo: new Audio("wohoo.ogg")
+      background: new Audio("snd/background.ogg")
+      bounce: new Audio("snd/bounce.ogg")
+      doh: [new Audio("snd/doh1.ogg"), 
+        new Audio("snd/doh2.ogg"),
+        new Audio("snd/doh3.ogg"),
+        new Audio("snd/doh4.ogg"),
+        new Audio("snd/doh5.ogg"),
+        new Audio("snd/doh6.ogg")]
+      gameover: new Audio("snd/gameover.ogg")
+      laugh: new Audio("snd/laugh.ogg")
+      load: new Audio("snd/load.ogg")
+      start: new Audio("snd/start.ogg")
+      thread: new Audio("snd/thread.ogg")
+      wohoo: new Audio("snd/wohoo.ogg")
 
     $('#version').text @version
   
@@ -57,6 +58,16 @@ class Viper
       success: @joingame
           
   joingame: (response) =>
+    if not response.success
+      @mainMenu.destroy()
+      @progress.text 'No game available, try creating one.'
+      @progress.fadeIn()
+      setTimeout (=> 
+          @mainMenu = new MainMenu @
+          $('#progress').fadeOut()
+        ), 3000
+      return
+  
     @gameID = response.gameID
     @socket = io.connect()
     
@@ -66,13 +77,15 @@ class Viper
     @socket.emit 'join',
       sessionID: @sessionID
       gameID: @gameID
+    
+    @mainMenu.destroy()
+    @progress.text 'Game joined, now waiting for an opponent to join...'
+    @progress.fadeIn()
           
   onMove: (data) =>
     x = data.x
     y = data.y
     hole = data.hole
-    
-    #console.log "Move recieved x: #{x} y: #{y} hole: #{hole}"
 
     if @worms.length==1
       worm = new Worm new jsts.geom.Coordinate(x, y), 0
@@ -84,20 +97,18 @@ class Viper
       segment = new WormSegment worm.lastPosition, worm.position, hole
       worm.segments.push segment
       worm.lineSegmentIndex.add segment
-      worm.draw @context, "rgb(155,155,155)", "rgb(25,25,25)"
+      worm.draw @context, "rgb(100,100,100)", "rgb(25,25,25)"
 
   onStart: =>
-    @mainMenu.destroy()
-    @score.fadeIn()
-
-    $(document).keydown (e) => @onKeyDown e
-    $(document).keyup (e) => @onKeyUp e
+    @progress.fadeOut()
     
-    @sounds.start.play()
-
     setTimeout (=> @startgame()), 500
 
   startgame: ->
+    $(document).keydown (e) => @onKeyDown e
+    $(document).keyup (e) => @onKeyUp e
+    @score.fadeIn()
+    @sounds.start.play()
     @sounds.wohoo.play()
     x = (Math.random() * 0.6) + 0.2;
     y = (Math.random() * 0.6) + 0.2;
@@ -118,10 +129,9 @@ class Viper
 
     @elapsed = now - @lastTime
 
+    # we only want to crawl main player but single crawls acts wierd?!
     #@crawl @worms[0]
     @crawl worm for worm in @worms
-
-    @score.text("Score: #{worm.score}")
 
     @lastTime = now
 
@@ -134,7 +144,7 @@ class Viper
     if worm.alive
       move = worm.move @elapsed
       
-      #report move to socket
+      #report move to socket which will send it to other player(s)
       if @socket
         @socket.emit 'move', 
           sessionID: @sessionID
@@ -146,6 +156,8 @@ class Viper
       if move.wallCollision then @sounds.bounce.play()
       worm.draw @context
       @collisionTest worm
+    
+    @score.text("Score: #{worm.score}")
 
   collisionTest: (worm) ->
     test = (otherWorm) =>
@@ -153,7 +165,7 @@ class Viper
       
       if result is 2
         worm.alive = false
-        @sounds.doh[Math.floor(Math.random()*7)].play()
+        @sounds.doh[Math.floor(Math.random()*6+1)].play()
         @sounds.gameover.play()
       else if result is 1 
         worm.score += 1
