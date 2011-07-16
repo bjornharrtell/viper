@@ -87,7 +87,7 @@ class Viper
     y = data.y
     hole = data.hole
 
-    if @worms.length==1
+    if @worms.length is 1
       worm = new Worm new jsts.geom.Coordinate(x, y), 0
       @worms.push worm
     else
@@ -97,7 +97,7 @@ class Viper
       segment = new WormSegment worm.lastPosition, worm.position, hole
       worm.segments.push segment
       worm.lineSegmentIndex.add segment
-      worm.draw @context, "rgb(100,100,100)", "rgb(25,25,25)"
+      worm.draw @context, 'red'
 
   onStart: =>
     @progress.fadeOut()

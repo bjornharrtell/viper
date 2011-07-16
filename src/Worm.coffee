@@ -5,11 +5,10 @@ class Worm
     @velocity = 0.0001
     @torque = 0
     @distance = 0
-    @color = "rgb(255,255,255)"
+    @color = 'white'
     @holeDistance = 0
     @hole = false
     @holes = 0
-    @holeColor = "rgb(50,50,50)"
     @segments = []
 
     @wormSegmentCache = []
@@ -103,15 +102,16 @@ class Worm
     height = context.canvas.height
     
     if not color? then color = @color
-    if not holeColor? then holeColor = @holeColor
 
     context.save()
     segment = @segments[@segments.length-1]
     context.beginPath()
     context.moveTo segment.start.x * width, segment.start.y * height
     context.lineTo segment.stop.x * width, segment.stop.y * height
-    context.lineWidth = 2
-    context.strokeStyle = if segment.hole then holeColor else color
+    context.lineWidth = if segment.hole then 0.3 else 2
+    context.strokeStyle = color
+    context.shadowColor = color
+    context.shadowBlur = 9
     context.stroke()
     context.restore()
 
