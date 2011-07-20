@@ -1,12 +1,13 @@
 class Viper
   constructor: ->
-    @version = "0.2"
+    @version = "0.3.0"
     @canvas = $('#canvas')
     @context = @canvas.get(0).getContext '2d'
     @score = $('#score')
     @progress = $('#progress')
     @urls = {}
     @worms = []
+    @gamerunning = false
     
     @sounds =
       background: new Audio("snd/background.ogg")
@@ -29,13 +30,20 @@ class Viper
     # get root resource
     $.ajax
       url: "/"
-      success: @initmenu
+      success: @init
 
-  initmenu: (response) =>
+  init: (response) =>
     @urls.games = response.games
     @urls.status = response.status
     @sessionID = response.sessionID
+
+    @initmenu()
+
+  initmenu: =>
+    @progress.fadeOut()
     
+    @context.clearRect 0, 0, @canvas.width(), @canvas.height()
+  
     @mainMenu = new MainMenu @
   
     # Get server status
@@ -62,10 +70,7 @@ class Viper
       @mainMenu.destroy()
       @progress.text 'No game available, try creating one.'
       @progress.fadeIn()
-      setTimeout (=> 
-          @mainMenu = new MainMenu @
-          $('#progress').fadeOut()
-        ), 3000
+      setTimeout @initmenu, 3000
       return
   
     @gameID = response.gameID
@@ -73,6 +78,7 @@ class Viper
     
     @socket.on 'start', @onStart
     @socket.on 'move', @onMove
+    @socket.on 'gameover', @onGameover
     
     @socket.emit 'join',
       sessionID: @sessionID
@@ -101,17 +107,40 @@ class Viper
 
   onStart: =>
     @progress.fadeOut()
+    setTimeout @startgame, 500
     
-    setTimeout (=> @startgame()), 500
+  onGameover: (result) =>
+    clearInterval @intervalID
+    @gamerunning = false
+    $(document).unbind 'keydown', @onKeyDown
+    $(document).unbind 'keyup', @onKeyUp
+    @worms = []
+  
+    if result is 0
+      @progress.text 'Draw!'
+    else if result is 1
+      @progress.text 'You won!' 
+    else
+      @progress.text 'You lost!' 
+ 
+    @progress.fadeIn()
+    
+    @sounds.gameover.play()
+    
+    setTimeout @initmenu, 3000
 
-  startgame: ->
-    $(document).keydown (e) => @onKeyDown e
-    $(document).keyup (e) => @onKeyUp e
+  startgame: =>
+    @gamerunning = true
+  
+    @context.clearRect 0, 0, @canvas.width(), @canvas.height()
+  
+    $(document).bind 'keydown', @onKeyDown
+    $(document).bind 'keyup', @onKeyUp
     @score.fadeIn()
     @sounds.start.play()
     @sounds.wohoo.play()
-    x = (Math.random() * 0.6) + 0.2;
-    y = (Math.random() * 0.6) + 0.2;
+    x = Math.random() * 0.6 + 0.2;
+    y = Math.random() * 0.6 + 0.2;
     direction = (Math.random() - 0.5) * 2.0 * Math.PI;
     worm = new Worm new jsts.geom.Coordinate(x, y), direction
     @worms.push worm
@@ -120,9 +149,9 @@ class Viper
     @lastTime = now + 100
     
     # TODO: optimize with requestAnimationFrame
-    setInterval (=> @timestep()), 50
+    @intervalID = setInterval @timestep, 50
 
-  timestep: ->
+  timestep: =>
     now = new Date().getTime()
 
     if @lastTime > now then return false
@@ -138,13 +167,17 @@ class Viper
     return true
 
   crawl: (worm) ->
-    # refactor preliminary mp test code
-    if worm != @worms[0] then return
+    # temp fix since single worm crawls does not work
+    if worm isnt @worms[0] then return
     
     if worm.alive
       move = worm.move @elapsed
+            
+      if move.wallCollision then @sounds.bounce.play()
+      worm.draw @context
+      @collisionTest worm
       
-      #report move to socket which will send it to other player(s)
+      # report move to socket which will send it to other player(s)
       if @socket
         @socket.emit 'move', 
           sessionID: @sessionID
@@ -152,34 +185,31 @@ class Viper
           x: move.x
           y: move.y
           hole: move.hole
-            
-      if move.wallCollision then @sounds.bounce.play()
-      worm.draw @context
-      @collisionTest worm
+          alive: worm.alive
+          score: worm.score
     
-    @score.text("Score: #{worm.score}")
+    @score.text "Score: #{worm.score}"
 
   collisionTest: (worm) ->
-    test = (otherWorm) =>
+    for otherWorm in @worms
       result = otherWorm.collisionTest worm.segments[worm.segments.length-1]
       
       if result is 2
         worm.alive = false
-        @sounds.doh[Math.floor(Math.random()*6+1)].play()
-        @sounds.gameover.play()
+        dohIndex = Math.floor Math.random() * 6
+        @sounds.doh[dohIndex].play()
+        if @worms.length is 1 then @onGameover()
       else if result is 1 
         worm.score += 1
         @sounds.thread.play()
 
-    test otherWorm for otherWorm in @worms
-
-  onKeyDown: (e) ->
+  onKeyDown: (e) =>
     if e.keyCode is 37
       @worms[0].torque = -0.002  
     else if e.keyCode is 39
       @worms[0].torque = 0.002
 
-  onKeyUp: (e) ->
+  onKeyUp: (e) =>
     if e.keyCode is 37 or e.keyCode is 39
       @worms[0].torque = 0
 

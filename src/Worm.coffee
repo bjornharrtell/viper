@@ -67,7 +67,7 @@ class Worm
       wallCollision: wallCollision
 
   collisionTest: (line) ->
-    if @segments.length<3 then return 0
+    if @segments.length < 3 then return 0
 
     intersectingLineSegments = @lineSegmentIndex.query(line);
     
@@ -108,7 +108,7 @@ class Worm
     context.beginPath()
     context.moveTo segment.start.x * width, segment.start.y * height
     context.lineTo segment.stop.x * width, segment.stop.y * height
-    context.lineWidth = if segment.hole then 0.3 else 2
+    context.lineWidth = if segment.hole then 0.3 else 1.5
     context.strokeStyle = color
     context.shadowColor = color
     context.shadowBlur = 9

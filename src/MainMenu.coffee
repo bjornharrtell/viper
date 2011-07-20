@@ -26,9 +26,8 @@ class MainMenu
 
   destroy: ->
     for menuitem in @menuitems
-      do (menuitem) ->
-        menuitem.stop()
-        menuitem.css 'color', '#888888'
+      menuitem.stop()
+      menuitem.css 'color', '#888888'
     $('#menu').fadeOut()
     
     $(document).unbind 'keydown', @keydown

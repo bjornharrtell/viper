@@ -1,7 +1,7 @@
-express = require('express')
+express = require 'express'
 
-app = express.createServer() #express.logger()
-app.use(express.static(__dirname + '/public'))
+app = express.createServer()
+app.use(express.static(__dirname + '/public', {maxAge: 604800000}))
 app.use express.cookieParser()
 app.use express.session
   secret: 'viperservices'
@@ -9,10 +9,14 @@ app.use express.session
 io = require('socket.io').listen app
 
 io.configure 'development', ->
-  io.set 'log level', 1
-  
+  io.set 'log level', 0
+  io.set 'browser client etag', true
+  io.set 'browser client minification', true
+
 io.configure 'production', ->
-  io.set 'log level', 1
+  io.set 'log level', 0
+  io.set 'browser client etag', true
+  io.set 'browser client minification', true
 
 viper =
   version: '0.1'
@@ -24,13 +28,13 @@ games = {}
 gamescount = 0
 
 countStartedGames = ->
-  count = 0;    
+  count = 0
   for key, game of games
     if game.started then count++
   return count
 
 countWaitingGames = ->
-  count = 0;    
+  count = 0
   for key, game of games
     if game.waiting then count++
   return count;
@@ -105,13 +109,46 @@ io.sockets.on 'connection', (socket) ->
   # handle move events from any player
   socket.on 'move', (data) ->
     sessionID = data.sessionID
-    game = games[data.gameID]
+    gameID = data.gameID
+    game = games[gameID]
     
     # send move to other players
     for key, player of game.players
-      if key != sessionID
+      if key isnt sessionID
         player.socket.emit 'move'
           x: data.x
           y: data.y
           hole: data.hole
- 
+    
+    game.players[sessionID].alive = data.alive
+    game.players[sessionID].score = data.score
+    
+    gameover = true
+    for key, player of game.players
+        if player.alive then gameover = false
+    
+    gameResult = (playerKey) =>
+      players = []
+      scores = []
+      winningScore = 0
+      winningPlayer = null
+      winningCount = 0
+      for key, player of game.players
+        players.push key
+        scores.push player.score
+      
+      if scores[0] is scores[1]
+        return 0
+      else if scores[0] > scores[1] and playerKey is players[0]
+        return 1
+      else if scores[1] > scores[0] and playerKey is players[1]
+        return 1
+      else 
+        return 2
+        
+    if gameover
+      for key, player of game.players
+        player.socket.emit 'gameover', gameResult(key)
+          
+      delete games[gameID]
+
