@@ -41,21 +41,19 @@ countWaitingGames = ->
 
 # root resource
 app.get "/", (request, response) ->
-  root =
+  response.send
     version: viper.version
     status: viper.status
     users: viper.users
     games: viper.games
     sessionID: request.sessionID
-  response.send root
-
+    
 # get service status
-app.get "/#{viper.status}", (request, response) ->
-  status =
+app.get "/#{viper.status}", (request, response) ->    
+  response.send
     usersCount: Object.keys(request.sessionStore.sessions).length
     gamesWaitingCount: countWaitingGames()
     gamesStartedCount: countStartedGames()
-  response.send status
 
 # get random game waiting id
 app.get "/#{viper.games}/random", (request, response) ->
@@ -74,13 +72,13 @@ app.post "/#{viper.games}", (request, response) ->
   sessionID = request.sessionID
   gameID = gamescount++
   
-  game =
+  games[gameID] =
     waiting: true
     started: false
     players: {}
-
-  games[gameID] = game
+    
   console.log("Game #{gameID} created")
+  
   response.send
     success: true
     gameID: gameID
@@ -125,14 +123,11 @@ io.sockets.on 'connection', (socket) ->
     
     gameover = true
     for key, player of game.players
-        if player.alive then gameover = false
+      if player.alive then gameover = false
     
     gameResult = (playerKey) =>
       players = []
       scores = []
-      winningScore = 0
-      winningPlayer = null
-      winningCount = 0
       for key, player of game.players
         players.push key
         scores.push player.score

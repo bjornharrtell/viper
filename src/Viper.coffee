@@ -1,6 +1,6 @@
 class Viper
   constructor: ->
-    @version = "0.3.0"
+    @version = "0.3.1"
     @canvas = $('#canvas')
     @context = @canvas.get(0).getContext '2d'
     @score = $('#score')
@@ -74,11 +74,12 @@ class Viper
       return
   
     @gameID = response.gameID
-    @socket = io.connect()
+    if not @socket?
+      @socket = io.connect()
     
-    @socket.on 'start', @onStart
-    @socket.on 'move', @onMove
-    @socket.on 'gameover', @onGameover
+      @socket.on 'start', @onStart
+      @socket.on 'move', @onMove
+      @socket.on 'gameover', @onGameover
     
     @socket.emit 'join',
       sessionID: @sessionID
@@ -109,16 +110,16 @@ class Viper
     @progress.fadeOut()
     setTimeout @startgame, 500
     
-  onGameover: (result) =>
+  onGameover: (data) =>
     clearInterval @intervalID
     @gamerunning = false
-    $(document).unbind 'keydown', @onKeyDown
-    $(document).unbind 'keyup', @onKeyUp
+    $(document).unbind 'keydown', @onKeydown
+    $(document).unbind 'keyup', @onKeup
     @worms = []
   
-    if result is 0
+    if data is 0
       @progress.text 'Draw!'
-    else if result is 1
+    else if data is 1
       @progress.text 'You won!' 
     else
       @progress.text 'You lost!' 
@@ -134,8 +135,8 @@ class Viper
   
     @context.clearRect 0, 0, @canvas.width(), @canvas.height()
   
-    $(document).bind 'keydown', @onKeyDown
-    $(document).bind 'keyup', @onKeyUp
+    $(document).bind 'keydown', @onKeydown
+    $(document).bind 'keyup', @onKeyup
     @score.fadeIn()
     @sounds.start.play()
     @sounds.wohoo.play()
@@ -158,17 +159,7 @@ class Viper
 
     @elapsed = now - @lastTime
 
-    # we only want to crawl main player but single crawls acts wierd?!
-    #@crawl @worms[0]
-    @crawl worm for worm in @worms
-
-    @lastTime = now
-
-    return true
-
-  crawl: (worm) ->
-    # temp fix since single worm crawls does not work
-    if worm isnt @worms[0] then return
+    worm = @worms[0]
     
     if worm.alive
       move = worm.move @elapsed
@@ -177,7 +168,7 @@ class Viper
       worm.draw @context
       @collisionTest worm
       
-      # report move to socket which will send it to other player(s)
+      # report move to server which will send it to other player(s)
       if @socket
         @socket.emit 'move', 
           sessionID: @sessionID
@@ -189,6 +180,10 @@ class Viper
           score: worm.score
     
     @score.text "Score: #{worm.score}"
+
+    @lastTime = now
+
+    return true
 
   collisionTest: (worm) ->
     for otherWorm in @worms
@@ -203,13 +198,13 @@ class Viper
         worm.score += 1
         @sounds.thread.play()
 
-  onKeyDown: (e) =>
+  onKeydown: (e) =>
     if e.keyCode is 37
       @worms[0].torque = -0.002  
     else if e.keyCode is 39
       @worms[0].torque = 0.002
 
-  onKeyUp: (e) =>
+  onKeyup: (e) =>
     if e.keyCode is 37 or e.keyCode is 39
       @worms[0].torque = 0
 

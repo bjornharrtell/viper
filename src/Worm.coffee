@@ -70,15 +70,15 @@ class Worm
     if @segments.length < 3 then return 0
 
     intersectingLineSegments = @lineSegmentIndex.query(line);
+
+    for segment in intersectingLineSegments
+      rli = new jsts.algorithm.RobustLineIntersector()
+      rli.computeIntersection line.p0, line.p1, segment.p0, segment.p1
+      if rli.result > 0 and segment.hole then return 1
+      if rli.result > 0 and not segment.hole then return 2
     
-    # TODO: do intersect calc between segments found in index and input
-    # (index only match bounding, we need real intersections)
+    return 0
     
-    if intersectingLineSegments.length is 0
-      return 0
-    else
-      if intersectingLineSegments[0].hole then return 1 else return 2
-   
   recordHole: ->
     holeInterval = 0.3
     # calc hole length to make it longer as the velocity increases
