@@ -77,7 +77,7 @@ app.post "/#{viper.games}", (request, response) ->
     started: false
     players: {}
     
-  console.log("Game #{gameID} created")
+  console.log("Game #{gameID} created.")
   
   response.send
     success: true
@@ -89,6 +89,16 @@ app.listen port
 # handle (web)socket connections
 io.sockets.on 'connection', (socket) ->
 
+  # handle disconnects
+  
+  socket.on 'disconnect', ->
+    for gameKey, game of games
+      for playerKey, player of game.players
+        if player.socket is socket
+          console.log("Player disconnected from #{gameKey}, deleting game.")
+          delete games[gameKey]
+          return
+
   # handle join events from any client
   socket.on 'join', (data) ->
     game = games[data.gameID]
@@ -97,8 +107,11 @@ io.sockets.on 'connection', (socket) ->
     
     playerscount = Object.keys(game.players).length
     
+    console.log("Player joined game #{data.gameID}.")
+    
     # send start signal to all players
     if playerscount>1
+      console.log("Starting game #{data.gameID}.")
       game.started = true
       game.waiting = false
       for key, player of game.players
@@ -142,6 +155,7 @@ io.sockets.on 'connection', (socket) ->
         return 2
         
     if gameover
+      console.log("Game #{gameID} ended.")
       for key, player of game.players
         player.socket.emit 'gameover', gameResult(key)
           
