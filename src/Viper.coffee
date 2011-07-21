@@ -1,6 +1,6 @@
 class Viper
   constructor: ->
-    @version = "0.3.1"
+    @version = "0.3.3"
     @canvas = $('#canvas')
     @context = @canvas.get(0).getContext '2d'
     @score = $('#score')
@@ -121,8 +121,10 @@ class Viper
       @progress.text 'Draw!'
     else if data is 1
       @progress.text 'You won!' 
-    else
-      @progress.text 'You lost!' 
+    else if data is 2
+      @progress.text 'You lost!'
+    else if data is 3
+      @progress.text 'Opponent disconnected!'
  
     @progress.fadeIn()
     

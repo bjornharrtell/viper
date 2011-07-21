@@ -77,7 +77,7 @@ app.post "/#{viper.games}", (request, response) ->
     started: false
     players: {}
     
-  console.log("Game #{gameID} created.")
+  console.log "Game #{gameID} created."
   
   response.send
     success: true
@@ -90,14 +90,23 @@ app.listen port
 io.sockets.on 'connection', (socket) ->
 
   # handle disconnects
-  
   socket.on 'disconnect', ->
     for gameKey, game of games
+      players = []
+      disconnected = false
       for playerKey, player of game.players
         if player.socket is socket
-          console.log("Player disconnected from #{gameKey}, deleting game.")
-          delete games[gameKey]
-          return
+          console.log "Player disconnected from #{gameKey}, deleting game."
+          disconnected = true
+        else
+          players.push player
+      
+      if disconnected
+        for player in players
+          console.log "Telling other players game is over with status 3."
+          player.socket.emit 'gameover', 3
+        console.log "Deleting game #{gameKey}."
+        delete games[gameKey]
 
   # handle join events from any client
   socket.on 'join', (data) ->
@@ -107,11 +116,11 @@ io.sockets.on 'connection', (socket) ->
     
     playerscount = Object.keys(game.players).length
     
-    console.log("Player joined game #{data.gameID}.")
+    console.log "Player joined game #{data.gameID}."
     
     # send start signal to all players
-    if playerscount>1
-      console.log("Starting game #{data.gameID}.")
+    if playerscount > 1
+      console.log "Starting game #{data.gameID}."
       game.started = true
       game.waiting = false
       for key, player of game.players
@@ -122,6 +131,8 @@ io.sockets.on 'connection', (socket) ->
     sessionID = data.sessionID
     gameID = data.gameID
     game = games[gameID]
+    
+    if not game? then return
     
     # send move to other players
     for key, player of game.players
@@ -155,7 +166,7 @@ io.sockets.on 'connection', (socket) ->
         return 2
         
     if gameover
-      console.log("Game #{gameID} ended.")
+      console.log "Game #{gameID} ended."
       for key, player of game.players
         player.socket.emit 'gameover', gameResult(key)
           
