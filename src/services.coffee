@@ -57,13 +57,17 @@ app.get "/#{viper.status}", (request, response) ->
 
 # get random game waiting id
 app.get "/#{viper.games}/random", (request, response) ->
+  sessionID = request.sessionID
+  
   # TODO: make truly random
   for key, game of games
     if game.waiting
-      response.send
-        success: true
-        gameID: key
-      return
+      for playerID, player of game.players
+        if playerID isnt sessionID
+          response.send
+            success: true
+            gameID: key
+          return
   response.send
     success: false
 
@@ -96,7 +100,7 @@ io.sockets.on 'connection', (socket) ->
       disconnected = false
       for playerKey, player of game.players
         if player.socket is socket
-          console.log "Player disconnected from #{gameKey}, deleting game."
+          console.log "Player disconnected from game #{gameKey}."
           disconnected = true
         else
           players.push player
