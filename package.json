@@ -1,8 +1,8 @@
 {
   "name": "viperservices",
-  "version": "0.0.1",
+  "version": "0.1.1",
   "dependencies": {
-    "express": "2.4.2",
-    "socket.io": "0.7.3"
+    "express": "2.4.3",
+    "socket.io": "0.7.7"
   }
 }

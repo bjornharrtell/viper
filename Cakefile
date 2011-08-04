@@ -26,7 +26,10 @@ task 'build', 'Build single application file from source files', ->
           console.log 'Done.'
 
 task 'minify', 'Minify the resulting application file after build', ->
-  exec 'java -jar "compiler.jar" --js public/lib/viper.js --compilation_level ADVANCED_OPTIMIZATIONS --js_output_file public/lib/viper-min.js', (err, stdout, stderr) ->
+  exec 'java -jar "compiler.jar" --js public/lib/viper.js --js_output_file public/lib/viper-min.js', (err, stdout, stderr) ->
+    throw err if err
+    console.log stdout + stderr
+  exec 'java -jar "compiler.jar" --js services.js --js_output_file services-min.js', (err, stdout, stderr) ->
     throw err if err
     console.log stdout + stderr
 

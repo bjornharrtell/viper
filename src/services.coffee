@@ -19,7 +19,7 @@ io.configure 'production', ->
   io.set 'browser client minification', true
 
 viper =
-  version: '0.1'
+  version: '0.1.1'
   status: 'status'
   users: 'users'
   games: 'games'
@@ -49,7 +49,16 @@ app.get "/", (request, response) ->
     sessionID: request.sessionID
     
 # get service status
-app.get "/#{viper.status}", (request, response) ->    
+app.get "/#{viper.status}", (request, response) ->
+  # loop sessions and get them (will purge expired sessions)
+  for sid in Object.keys(request.sessionStore.sessions)
+    sess = request.sessionStore.sessions[sid];
+    if sess
+      sess = JSON.parse(sess);
+      expires = if 'string' == typeof sess.cookie.expires then new Date(sess.cookie.expires) else sess.cookie.expires
+      if new Date >= expires
+        request.sessionStore.destroy sid
+
   response.send
     usersCount: Object.keys(request.sessionStore.sessions).length
     gamesWaitingCount: countWaitingGames()

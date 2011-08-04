@@ -1,14 +1,30 @@
 class MainMenu
   constructor: (@viper) ->
-    @menuitems = [$('#startsingle'), $('#joinmulti'), $('#createmulti')]
+    @startsingle = $('#startsingle')
+    @joinmulti = $('#joinmulti')
+    @createmulti = $('#createmulti')
+    @menuitems = [@startsingle, @joinmulti, @createmulti]
     @currentindex = 0
 
     @menuitems[@currentindex].animate
       'color': '#ffffff'
 
     $(document).bind 'keydown', @keydown
+    @startsingle.bind 'click', @start
+    @joinmulti.bind 'click', @join
+    @createmulti.bind 'click', @create
     
     $('#menu').fadeIn()
+
+  start: =>
+    @destroy()
+    @viper.startgame()
+    
+  join: =>
+    @viper.join()
+
+  create: =>
+    @viper.create()
 
   keydown: (e) =>
     if e.keyCode is 40
@@ -17,12 +33,11 @@ class MainMenu
       @move false
     if e.keyCode is 13
       if @currentindex is 0
-        @destroy()
-        @viper.startgame()
+        @start()
       else if @currentindex is 1
-        @viper.join()
+        @join()
       else if @currentindex is 2
-        @viper.create()
+        @create()
 
   destroy: ->
     for menuitem in @menuitems
@@ -31,6 +46,9 @@ class MainMenu
     $('#menu').fadeOut()
     
     $(document).unbind 'keydown', @keydown
+    @startsingle.unbind 'click', @start
+    @joinmulti.unbind 'click', @join
+    @createmulti.unbind 'click', @create
 
   move: (down) ->
     if down and @currentindex is 2 

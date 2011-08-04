@@ -1,6 +1,6 @@
 class Viper
   constructor: ->
-    @version = "0.3.3"
+    @version = "0.5.8"
     @canvas = $('#canvas')
     @context = @canvas.get(0).getContext '2d'
     @score = $('#score')
@@ -8,6 +8,7 @@ class Viper
     @urls = {}
     @worms = []
     @gamerunning = false
+    @isTouch = false
     
     @sounds =
       background: new Audio("snd/background.ogg")
@@ -115,6 +116,10 @@ class Viper
     @gamerunning = false
     $(document).unbind 'keydown', @onKeydown
     $(document).unbind 'keyup', @onKeup
+    $(document).unbind 'mousedown', @onMousedown
+    $(document).unbind 'mouseup', @onMouseup
+    $(document).unbind 'touchstart', @onTouchstart
+    $(document).unbind 'touchend', @onTouchend
     @worms = []
   
     if data is 0
@@ -139,6 +144,10 @@ class Viper
   
     $(document).bind 'keydown', @onKeydown
     $(document).bind 'keyup', @onKeyup
+    $(document).bind 'mousedown', @onMousedown
+    $(document).bind 'mouseup', @onMouseup
+    $(document).bind 'touchstart', @onTouchstart
+    $(document).bind 'touchend', @onTouchend
     @score.fadeIn()
     @sounds.start.play()
     @sounds.wohoo.play()
@@ -201,14 +210,52 @@ class Viper
         @sounds.thread.play()
 
   onKeydown: (e) =>
+    e.preventDefault()
     if e.keyCode is 37
-      @worms[0].torque = -0.002  
+      @worms[0].torque = -0.002
     else if e.keyCode is 39
       @worms[0].torque = 0.002
 
   onKeyup: (e) =>
+    e.preventDefault();
     if e.keyCode is 37 or e.keyCode is 39
       @worms[0].torque = 0
+      
+  onMousedown: (e) =>
+    e.preventDefault()
+    
+    if e.clientX < $(document).width()/2
+      @worms[0].torque = -0.002
+    else
+      @worms[0].torque = 0.002
+    
+  onMouseup: (e) =>
+    e.preventDefault()
 
+    @worms[0].torque = 0
+    
+  onTouchstart: (e) =>
+    e.preventDefault()
+  
+    if not @isTouch
+      $(document).unbind 'mousedown', @onMousedown
+      $(document).unbind 'mouseup', @onMouseup
+      @isTouch = true
+      
+    if e.originalEvent.touches.length isnt 1
+      return false
+    
+    touch = e.originalEvent.touches[0]
+    
+    if touch.pageX < $(document).width()/2
+      @worms[0].torque = -0.002
+    else
+      @worms[0].torque = 0.002
+    
+  onTouchend: (e) =>
+    e.preventDefault()
+
+    @worms[0].torque = 0
+    
 new Viper()
 
